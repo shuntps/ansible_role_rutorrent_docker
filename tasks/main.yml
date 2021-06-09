@@ -1,0 +1,9 @@
+---
+- include_tasks: network.yml
+  when: rutorrent_enabled == "true"
+
+- include_tasks: start.yml
+  when: rutorrent_enabled == "true"
+
+- include_tasks: stop.yml
+  when: rutorrent_enabled == "false"

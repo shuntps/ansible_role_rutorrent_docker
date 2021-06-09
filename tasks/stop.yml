@@ -1,0 +1,5 @@
+---
+- name: Stop "{{ rutorrent_name }}" container
+  community.docker.docker_container:
+    name: "{{ rutorrent_name }}"
+    state: absent

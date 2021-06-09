@@ -1,0 +1,44 @@
+---
+# Shared docker variable
+docker_data_dir: /data/docker
+docker_dir: /data
+docker_external_network: frontend
+docker_external_network_subnet: 192.168.250.0/24
+docker_internal_network: backend
+docker_internal_network_subnet: 192.168.50.0/24
+docker_domain: example.com
+docker_timezone: America/Montreal
+docker_puid: "1000"
+docker_pgid: "1000"
+
+# General
+rutorrent_enabled: "false"
+rutorrent_name: rutorrent
+rutorrent_version: latest
+rutorrent_restart_policy: unless-stopped
+rutorrent_recreate: "false"
+
+# Environment
+rutorrent_timezone: "{{ docker_timezone }}"
+rutorrent_puid: "{{ docker_puid }}"
+rutorrent_pgid: "{{ docker_pgid }}"
+
+# Directories
+rutorrent_data_dir: "{{ docker_data_dir }}/{{ rutorrent_name }}"
+rutorrent_dl_dir: "{{ docker_dir }}/downloads"
+
+# Network
+rutorrent_available_externally: "true"
+rutorrent_http_port: "8080"
+rutorrent_xmlrpc_port: "8000"
+rutorrent_dht_port: "6881"
+rutorrent_inc_port: "50000"
+rutorrent_svc_port: "8080"
+rutorrent_network_mode: "{{ docker_external_network }}"
+rutorrent_domain: "{{ docker_domain }}"
+rutorrent_webdav_domain: "{{ docker_domain }}"
+
+# Webdav
+webdav_name: webdav
+webdav_domain: "{{ docker_domain }}"
+webdav_port: "9000"

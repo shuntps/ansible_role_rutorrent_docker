@@ -1,0 +1,77 @@
+---
+- name: Create "{{ rutorrent_name }}" Directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - "{{ rutorrent_data_dir }}"
+
+- name: Start "{{ rutorrent_name }}" container
+  community.docker.docker_container:
+    name: "{{ rutorrent_name }}"
+    image: "crazymax/rtorrent-rutorrent:{{ rutorrent_version }}"
+    restart_policy: "{{ rutorrent_restart_policy }}"
+    recreate: "{{ rutorrent_recreate }}"
+    pull: "true"
+    env:
+      TZ: "{{ rutorrent_timezone }}"
+      PUID: "{{ rutorrent_puid }}"
+      PGID: "{{ rutorrent_pgid }}"
+      MEMORY_LIMIT: 256M
+      UPLOAD_MAX_SIZE: 16M
+      OPCACHE_MEM_SIZE: "128"
+      MAX_FILE_UPLOADS: "50"
+      REAL_IP_FROM: 0.0.0.0/32
+      REAL_IP_HEADER: X-Forwarded-For
+      LOG_IP_VAR: http_x_forwarded_for
+      XMLRPC_AUTHBASIC_STRING: rTorrent XMLRPC restricted access
+      RUTORRENT_AUTHBASIC_STRING: ruTorrent restricted access
+      WEBDAV_AUTHBASIC_STRING: WebDAV restricted access
+      RT_LOG_LEVEL: info
+      RT_LOG_EXECUTE: "false"
+      RT_LOG_XMLRPC: "false"
+      RU_REMOVE_CORE_PLUGINS: erasedata,httprpc
+      RU_HTTP_USER_AGENT: Mozilla/5.0 (Windows NT 6.0; WOW64; rv:12.0) Gecko/20100101 Firefox/12.0
+      RU_HTTP_TIME_OUT: "30"
+      RU_HTTP_USE_GZIP: "true"
+      RU_RPC_TIME_OUT: "5"
+      RU_LOG_RPC_CALLS: "false"
+      RU_LOG_RPC_FAULTS: "true"
+      RU_PHP_USE_GZIP: "false"
+      RU_PHP_GZIP_LEVEL: "2"
+      RU_SCHEDULE_RAND: "10"
+      RU_LOG_FILE: /data/rutorrent/rutorrent.log
+      RU_DO_DIAGNOSTIC: "true"
+      RU_SAVE_UPLOADED_TORRENTS: "true"
+      RU_OVERWRITE_UPLOADED_TORRENTS: "false"
+      RU_FORBID_USER_SETTINGS: "false"
+      RU_LOCALE: UTF8
+    volumes:
+      - "{{ rutorrent_data_dir }}/data:/data:rw"
+      - "{{ rutorrent_data_dir }}/passwd:/passwd:rw"
+      - "{{ rutorrent_dl_dir }}:/downloads:rw"
+    ports:
+      # - "{{ webdav_port }}:9000"
+      # - "{{ rutorrent_http_port }}:8080"
+      # - "{{ rutorrent_xmlrpc_port }}:8000"
+      - "{{ rutorrent_dht_port }}:6881/udp"
+      - "{{ rutorrent_inc_port }}:50000"
+    networks:
+      - name: "{{ rutorrent_network_mode }}"
+    purge_networks: "yes"
+    networks_cli_compatible: "yes"
+    labels:
+      traefik.enable: "{{ rutorrent_available_externally }}"
+      ## HTTP Routers
+      traefik.http.routers.rutorrent-rtr.entrypoints: https
+      traefik.http.routers.rutorrent-rtr.rule: Host(`{{ rutorrent_name }}.{{ rutorrent_domain }}`)
+      traefik.http.routers.webdav-rtr.entrypoints: https
+      traefik.http.routers.webdav-rtr.rule: Host(`{{ webdav_name }}.{{ webdav_domain }}`)
+      ## Middlewares
+      traefik.http.routers.rutorrent-rtr.middlewares: chain-oauth@file
+      traefik.http.routers.webdav-rtr.middlewares: chain-oauth@file
+      ## HTTP Services
+      traefik.http.routers.rutorrent-rtr.service: rutorrent-svc
+      traefik.http.routers.webdav-rtr.service: webdav-svc
+      traefik.http.services.rutorrent-svc.loadbalancer.server.port: "{{ rutorrent_svc_port }}"
+      traefik.http.services.webdav-svc.loadbalancer.server.port: "{{ webdav_port }}"
