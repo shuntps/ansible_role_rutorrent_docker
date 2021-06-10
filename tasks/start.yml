@@ -54,7 +54,7 @@
       # - "{{ webdav_port }}:9000"
       # - "{{ rutorrent_http_port }}:8080"
       # - "{{ rutorrent_xmlrpc_port }}:8000"
-      - "{{ rutorrent_dht_port }}:6881/udp"
+      # - "{{ rutorrent_dht_port }}:6881/udp"
       - "{{ rutorrent_inc_port }}:50000"
     networks:
       - name: "{{ rutorrent_network_mode }}"
